@@ -20,12 +20,16 @@ export async function sendEmail(params: SendEmailParams): Promise<EmailResult> {
   const { to, subject, html, businessId, emailType, fromName } = params;
 
   try {
+    // Use dedicated email service URL if available, otherwise fall back to main Supabase URL
+    const emailBaseUrl = import.meta.env.VITE_EMAIL_FUNCTION_URL || `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-email`;
+    const emailAnonKey = import.meta.env.VITE_EMAIL_ANON_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
+
     const response = await fetch(
-      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-email`,
+      emailBaseUrl,
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Authorization': `Bearer ${emailAnonKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({

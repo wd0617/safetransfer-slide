@@ -195,12 +195,15 @@ export default function EmailSettings() {
     setMessage(null);
 
     try {
+      const emailBaseUrl = import.meta.env.VITE_EMAIL_FUNCTION_URL || `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-email`;
+      const emailAnonKey = import.meta.env.VITE_EMAIL_ANON_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
+
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-email`,
+        emailBaseUrl,
         {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            'Authorization': `Bearer ${emailAnonKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
@@ -349,8 +352,8 @@ export default function EmailSettings() {
 
           {message && (
             <div className={`p-4 rounded-lg flex items-center gap-3 ${message.type === 'success'
-                ? 'bg-green-900/30 border border-green-800/50 text-green-100'
-                : 'bg-red-900/30 border border-red-800/50 text-red-100'
+              ? 'bg-green-900/30 border border-green-800/50 text-green-100'
+              : 'bg-red-900/30 border border-red-800/50 text-red-100'
               }`}>
               {message.type === 'success' ? (
                 <CheckCircle className="w-5 h-5" />
@@ -510,8 +513,8 @@ export default function EmailSettings() {
 
           {telegramMessage && (
             <div className={`p-4 rounded-lg flex items-center gap-3 ${telegramMessage.type === 'success'
-                ? 'bg-green-900/30 border border-green-800/50 text-green-100'
-                : 'bg-red-900/30 border border-red-800/50 text-red-100'
+              ? 'bg-green-900/30 border border-green-800/50 text-green-100'
+              : 'bg-red-900/30 border border-red-800/50 text-red-100'
               }`}>
               {telegramMessage.type === 'success' ? (
                 <CheckCircle className="w-5 h-5" />
