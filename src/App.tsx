@@ -20,6 +20,15 @@ function AppContent() {
   });
   const [, setShowingDeactivatedMessage] = useState(false);
   const [renderKey, setRenderKey] = useState(0);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
 
   useEffect(() => {
     logger.log('[APP] State changed:', { viewMode, isBusinessAuthenticated, renderKey, loading });
@@ -117,14 +126,16 @@ function AppContent() {
     <>
       <DisplayScreen />
 
-      <button
-        onClick={() => setViewMode(isBusinessAuthenticated ? 'business-admin' : 'business-login')}
-        className="fixed bottom-4 right-4 px-4 py-2 bg-white text-gray-800 rounded-lg hover:bg-gray-100 transition-all z-50 flex items-center gap-2 led-glow-button"
-        title="Panel de Negocio"
-      >
-        <Store className="w-5 h-5" />
-        <span className="font-medium">Admin Panel</span>
-      </button>
+      {!isFullscreen && (
+        <button
+          onClick={() => setViewMode(isBusinessAuthenticated ? 'business-admin' : 'business-login')}
+          className="fixed bottom-4 right-4 px-4 py-2 bg-white text-gray-800 rounded-lg hover:bg-gray-100 transition-all z-50 flex items-center gap-2 led-glow-button"
+          title="Panel de Negocio"
+        >
+          <Store className="w-5 h-5" />
+          <span className="font-medium">Admin Panel</span>
+        </button>
+      )}
     </>
   );
 }
