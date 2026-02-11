@@ -164,7 +164,7 @@ export default function EmailSettings() {
           body: JSON.stringify({
             bot_token: telegramBotToken,
             chat_id: telegramChatId,
-            message: '<b>Prueba Exitosa</b>\n\nLas notificaciones por Telegram estan configuradas correctamente.\n\nRecibiras notificaciones aqui cuando:\n- Un negocio envie un mensaje de soporte\n- Un negocio solicite recuperacion de contrasena\n\n<i>SafeTransfer Slide</i>',
+            message: '<b>Prueba Exitosa</b>\n\nLas notificaciones por Telegram estan configuradas correctamente.\n\nRecibiras notificaciones aqui cuando:\n- Un negocio envie un mensaje de soporte\n- Un negocio solicite recuperacion de contrasena\n\n<i>MoneyTransfer Display</i>',
             parse_mode: 'HTML',
           }),
         }
@@ -177,9 +177,9 @@ export default function EmailSettings() {
       }
 
       setTelegramMessage({ type: 'success', text: 'Mensaje de prueba enviado correctamente' });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending test telegram:', error);
-      setTelegramMessage({ type: 'error', text: error instanceof Error ? error.message : 'Error al enviar mensaje de prueba' });
+      setTelegramMessage({ type: 'error', text: error.message || 'Error al enviar mensaje de prueba' });
     } finally {
       setTestingTelegram(false);
     }
@@ -195,20 +195,17 @@ export default function EmailSettings() {
     setMessage(null);
 
     try {
-      const emailBaseUrl = import.meta.env.VITE_EMAIL_FUNCTION_URL || `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-email`;
-      const emailAnonKey = import.meta.env.VITE_EMAIL_ANON_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
-
       const response = await fetch(
-        emailBaseUrl,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-email`,
         {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${emailAnonKey}`,
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
             to: notificationEmail,
-            subject: 'Prueba de notificaciones - SafeTransfer Slide',
+            subject: 'Prueba de notificaciones - MoneyTransfer Display',
             html: `
               <!DOCTYPE html>
               <html>
@@ -239,7 +236,7 @@ export default function EmailSettings() {
                   </ul>
                 </div>
                 <div class="footer">
-                  <p>SafeTransfer Slide - Sistema de Notificaciones</p>
+                  <p>MoneyTransfer Display - Sistema de Notificaciones</p>
                 </div>
               </body>
               </html>
@@ -256,9 +253,9 @@ export default function EmailSettings() {
 
       setMessage({ type: 'success', text: 'Email de prueba enviado correctamente' });
       loadEmailLogs();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error sending test email:', error);
-      setMessage({ type: 'error', text: error instanceof Error ? error.message : 'Error al enviar email de prueba' });
+      setMessage({ type: 'error', text: error.message || 'Error al enviar email de prueba' });
     } finally {
       setTestingEmail(false);
     }
@@ -351,10 +348,11 @@ export default function EmailSettings() {
           </div>
 
           {message && (
-            <div className={`p-4 rounded-lg flex items-center gap-3 ${message.type === 'success'
-              ? 'bg-green-900/30 border border-green-800/50 text-green-100'
-              : 'bg-red-900/30 border border-red-800/50 text-red-100'
-              }`}>
+            <div className={`p-4 rounded-lg flex items-center gap-3 ${
+              message.type === 'success'
+                ? 'bg-green-900/30 border border-green-800/50 text-green-100'
+                : 'bg-red-900/30 border border-red-800/50 text-red-100'
+            }`}>
               {message.type === 'success' ? (
                 <CheckCircle className="w-5 h-5" />
               ) : (
@@ -512,10 +510,11 @@ export default function EmailSettings() {
           </div>
 
           {telegramMessage && (
-            <div className={`p-4 rounded-lg flex items-center gap-3 ${telegramMessage.type === 'success'
-              ? 'bg-green-900/30 border border-green-800/50 text-green-100'
-              : 'bg-red-900/30 border border-red-800/50 text-red-100'
-              }`}>
+            <div className={`p-4 rounded-lg flex items-center gap-3 ${
+              telegramMessage.type === 'success'
+                ? 'bg-green-900/30 border border-green-800/50 text-green-100'
+                : 'bg-red-900/30 border border-red-800/50 text-red-100'
+            }`}>
               {telegramMessage.type === 'success' ? (
                 <CheckCircle className="w-5 h-5" />
               ) : (
@@ -567,8 +566,9 @@ export default function EmailSettings() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className={`px-2 py-1 rounded text-xs font-semibold ${log.status === 'sent' ? 'bg-green-900/30 text-green-100' : 'bg-red-900/30 text-red-100'
-                    }`}>
+                  <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                    log.status === 'sent' ? 'bg-green-900/30 text-green-100' : 'bg-red-900/30 text-red-100'
+                  }`}>
                     {log.status === 'sent' ? 'Enviado' : 'Fallido'}
                   </span>
                   <span className="text-white text-xs">

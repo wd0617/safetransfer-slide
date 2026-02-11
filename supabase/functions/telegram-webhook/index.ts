@@ -99,7 +99,7 @@ async function handlePasswordRecoveryConversation(
       .maybeSingle();
 
     const nameMatch = fullName.toLowerCase().includes(businessAdmin.email.split('@')[0].toLowerCase()) ||
-      businessAdmin.email.toLowerCase().includes(fullName.toLowerCase().split(' ')[0]);
+                     businessAdmin.email.toLowerCase().includes(fullName.toLowerCase().split(' ')[0]);
     const businessMatch = business && businessName.toLowerCase().includes(business.business_name.toLowerCase());
 
     if (nameMatch || businessMatch) {
@@ -245,7 +245,7 @@ Deno.serve(async (req: Request) => {
       } else if (superadmin.telegram_chat_id === chatId) {
         responseMessage = `<b>Ya estas conectado!</b>\n\n` +
           `Tu Chat ID ya esta asociado a tu cuenta de SuperAdmin.\n\n` +
-          `<i>SafeTransfer Slide</i>`;
+          `<i>MoneyTransfer Display</i>`;
       } else {
         const { error: updateError } = await supabase
           .from('business_admins')
@@ -261,7 +261,7 @@ Deno.serve(async (req: Request) => {
             `- Un negocio envie un mensaje de soporte\n` +
             `- Un negocio solicite recuperacion de contrasena\n` +
             `- Notificaciones del sistema\n\n` +
-            `<i>SafeTransfer Slide</i>`;
+            `<i>MoneyTransfer Display</i>`;
         }
       }
     } else if (text.startsWith('/conectar ')) {
@@ -281,7 +281,7 @@ Deno.serve(async (req: Request) => {
       } else if (business.telegram_chat_id === chatId) {
         responseMessage = `<b>Ya estas conectado!</b>\n\n` +
           `Tu Chat ID ya esta asociado a tu cuenta de negocio.\n\n` +
-          `<i>SafeTransfer Slide</i>`;
+          `<i>MoneyTransfer Display</i>`;
       } else {
         const { error: updateError } = await supabase
           .from('business_admins')
@@ -294,7 +294,7 @@ Deno.serve(async (req: Request) => {
           responseMessage = `<b>Conexion exitosa!</b>\n\n` +
             `Tu Chat ID ha sido asociado a tu cuenta de negocio (${business.email}).\n\n` +
             `Ahora recibiras notificaciones importantes sobre tu negocio.\n\n` +
-            `<i>SafeTransfer Slide</i>`;
+            `<i>MoneyTransfer Display</i>`;
         }
       }
     } else if (text === '/start' || text === '/chatid') {
@@ -304,7 +304,7 @@ Deno.serve(async (req: Request) => {
         `<b>SuperAdmin:</b> Escribe <code>/superadmin</code>\n` +
         `<b>Negocio:</b> Escribe <code>/conectar [tu-codigo]</code>\n\n` +
         `O copia tu Chat ID y pegalo manualmente en tu panel.\n\n` +
-        `<i>SafeTransfer Slide</i>`;
+        `<i>MoneyTransfer Display</i>`;
     } else if (text === '/help') {
       responseMessage = `<b>Comandos disponibles:</b>\n\n` +
         `<b>/superadmin</b> - Conectar como SuperAdmin\n` +
@@ -312,7 +312,7 @@ Deno.serve(async (req: Request) => {
         `<b>/start</b> - Ver tu Chat ID\n` +
         `<b>/chatid</b> - Ver tu Chat ID\n` +
         `<b>/help</b> - Ver esta ayuda\n\n` +
-        `<i>SafeTransfer Slide</i>`;
+        `<i>MoneyTransfer Display</i>`;
     } else {
       responseMessage = `Hola ${firstName}!\n\n` +
         `Tu Chat ID es: <code>${chatId}</code>\n\n` +

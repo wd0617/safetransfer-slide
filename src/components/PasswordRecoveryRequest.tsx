@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { KeyRound, ArrowLeft, CheckCircle, AlertCircle, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { sendEmail, getBusinessLanguage, BusinessLanguage } from '../lib/emailService';
-import { sendTemplatedNotification, sendTelegramToBusinessIfEnabled, telegramTemplates } from '../lib/telegramService';
+import { sendTelegramNotification } from '../lib/notificationService';
 import { localizedEmailTemplates, getEmailSubject } from '../lib/emailTemplates';
 
 interface PasswordRecoveryRequestProps {
@@ -101,7 +101,7 @@ export default function PasswordRecoveryRequest({ onBack }: PasswordRecoveryRequ
         .eq('id', adminData.business_id)
         .maybeSingle();
 
-      await sendTemplatedNotification({
+      await sendTelegramNotification({
         businessId: adminData.business_id,
         templateKey: 'password_change_request',
         variables: {
@@ -111,9 +111,9 @@ export default function PasswordRecoveryRequest({ onBack }: PasswordRecoveryRequ
 
       setStep('code');
       setLoading(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error('[PASSWORD_RECOVERY] Unexpected error:', err);
-      setError(err instanceof Error ? err.message : 'Error inesperado. Por favor intenta nuevamente.');
+      setError(err.message || 'Error inesperado. Por favor intenta nuevamente.');
       setLoading(false);
     }
   };
@@ -162,17 +162,36 @@ export default function PasswordRecoveryRequest({ onBack }: PasswordRecoveryRequ
           .eq('id', businessId)
           .maybeSingle();
 
-        const message = telegramTemplates.passwordChanged(
-          business?.business_name || 'Negocio'
-        );
-        await sendTelegramToBusinessIfEnabled(businessId, message);
+        const botToken = import.meta.env.VITE_TELEGRAM_BOT_TOKEN;
+        const { data: businessAdmin } = await supabase
+          .from('business_admins')
+          .select('telegram_chat_id')
+          .eq('business_id', businessId)
+          .maybeSingle();
+
+        if (botToken && businessAdmin?.telegram_chat_id) {
+          const message = `<b>Contrasena Actualizada</b>\n\n` +
+            `${business?.business_name || 'Negocio'},\n\n` +
+            `Tu contrasena ha sido cambiada exitosamente.\n\n` +
+            `Si no realizaste este cambio, contacta a soporte inmediatamente.`;
+
+          await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: businessAdmin.telegram_chat_id,
+              text: message,
+              parse_mode: 'HTML',
+            }),
+          });
+        }
       }
 
       setStep('success');
       setLoading(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error('[PASSWORD_RECOVERY] Unexpected error:', err);
-      setError(err instanceof Error ? err.message : 'Error inesperado. Por favor intenta nuevamente.');
+      setError(err.message || 'Error inesperado. Por favor intenta nuevamente.');
       setLoading(false);
     }
   };

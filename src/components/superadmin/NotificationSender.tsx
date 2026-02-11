@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Send, MessageSquare, CheckCircle, AlertTriangle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import { sendTemplatedNotification, scheduleNotification } from '../../lib/telegramService';
+import { sendTelegramNotification, scheduleNotification } from '../../lib/notificationService';
 
 interface Business {
   id: string;
@@ -115,7 +115,7 @@ export default function NotificationSender() {
         });
         setMessage({ type: 'success', text: 'Notificacion programada exitosamente' });
       } else {
-        const success = await sendTemplatedNotification({
+        const success = await sendTelegramNotification({
           businessId: selectedBusiness,
           templateKey: selectedTemplate,
           variables,
@@ -154,10 +154,11 @@ export default function NotificationSender() {
 
       {message && (
         <div
-          className={`p-4 rounded-lg flex items-center gap-3 ${message.type === 'success'
-            ? 'bg-green-900/30 border border-green-800/50 text-green-100'
-            : 'bg-red-900/30 border border-red-800/50 text-red-100'
-            }`}
+          className={`p-4 rounded-lg flex items-center gap-3 ${
+            message.type === 'success'
+              ? 'bg-green-900/30 border border-green-800/50 text-green-100'
+              : 'bg-red-900/30 border border-red-800/50 text-red-100'
+          }`}
         >
           {message.type === 'success' ? (
             <CheckCircle className="w-5 h-5" />

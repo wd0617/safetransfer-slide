@@ -1,15 +1,80 @@
 import { useEffect, useState, useRef } from 'react';
 import { supabase, ExchangeRate, MediaItem, Announcement, ServiceLogo } from '../lib/supabase';
 import { sessionManager } from '../lib/sessionManager';
-import { Clock, DollarSign, TrendingUp, Cloud, Maximize, Minimize } from 'lucide-react';
+import { Clock, DollarSign, TrendingUp, Cloud, Maximize, Minimize, Globe, BarChart3, Megaphone, Image, Palette, Bell } from 'lucide-react';
 import MediaCarousel from './MediaCarousel';
 import AnnouncementTicker from './AnnouncementTicker';
 import ServiceLogosCarousel from './ServiceLogosCarousel';
 import { Language, getTranslation } from '../lib/translations';
 import { ThemeProvider } from '../contexts/ThemeContext';
 import { getTranslatedCountryName } from '../lib/countries';
-import { rotatingPhrases } from '../lib/constants';
-import { logger } from '../lib/logger';
+
+const rotatingPhrases = [
+  {
+    icon: DollarSign,
+    phrases: {
+      es: 'Gestiona tasas de cambio en tiempo real',
+      en: 'Manage exchange rates in real time',
+      it: 'Gestisci i tassi di cambio in tempo reale'
+    }
+  },
+  {
+    icon: Globe,
+    phrases: {
+      es: 'Soporte multiidioma: Espanol, Ingles, Italiano',
+      en: 'Multi-language support: Spanish, English, Italian',
+      it: 'Supporto multilingua: Spagnolo, Inglese, Italiano'
+    }
+  },
+  {
+    icon: BarChart3,
+    phrases: {
+      es: 'Muestra las mejores tasas automaticamente',
+      en: 'Display best rates automatically',
+      it: 'Mostra automaticamente le migliori tariffe'
+    }
+  },
+  {
+    icon: Megaphone,
+    phrases: {
+      es: 'Publica anuncios y promociones',
+      en: 'Publish announcements and promotions',
+      it: 'Pubblica annunci e promozioni'
+    }
+  },
+  {
+    icon: Image,
+    phrases: {
+      es: 'Carrusel multimedia con imagenes y videos',
+      en: 'Multimedia carousel with images and videos',
+      it: 'Carosello multimediale con immagini e video'
+    }
+  },
+  {
+    icon: Clock,
+    phrases: {
+      es: 'Actualiza horarios y clima en vivo',
+      en: 'Update schedules and live weather',
+      it: 'Aggiorna orari e meteo in tempo reale'
+    }
+  },
+  {
+    icon: Palette,
+    phrases: {
+      es: 'Personaliza colores y temas',
+      en: 'Customize colors and themes',
+      it: 'Personalizza colori e temi'
+    }
+  },
+  {
+    icon: Bell,
+    phrases: {
+      es: 'Notificaciones y soporte integrado',
+      en: 'Integrated notifications and support',
+      it: 'Notifiche e supporto integrato'
+    }
+  }
+];
 
 const displayLanguages: Language[] = ['es', 'en', 'it'];
 
@@ -39,12 +104,14 @@ export default function DisplayScreen({ businessId }: DisplayScreenProps = {}) {
   useEffect(() => {
     initializeBusinessId();
 
-    const unsubscribe = sessionManager.onSessionChange((event) => {
-      if (event.type === 'business-set') {
-        logger.log('[DISPLAY] Session changed via event, updating businessId to:', event.session.businessId);
-        setSelectedBusinessId(event.session.businessId);
-      } else if (event.type === 'business-cleared') {
-        logger.log('[DISPLAY] Session cleared via event');
+    const interval = setInterval(() => {
+      const businessSession = sessionManager.getBusinessSession();
+
+      if (businessSession?.businessId && businessSession.businessId !== selectedBusinessId) {
+        console.log('[DISPLAY] Session changed, updating businessId to:', businessSession.businessId);
+        setSelectedBusinessId(businessSession.businessId);
+      } else if (!businessSession && selectedBusinessId) {
+        console.log('[DISPLAY] Session cleared, clearing businessId');
         setSelectedBusinessId(null);
         setBusinessName('Service Point');
         setLogoUrl(null);
@@ -53,10 +120,10 @@ export default function DisplayScreen({ businessId }: DisplayScreenProps = {}) {
         setAnnouncements([]);
         setServiceLogos([]);
       }
-    });
+    }, 1000);
 
-    return () => unsubscribe();
-  }, [businessId]);
+    return () => clearInterval(interval);
+  }, [businessId, selectedBusinessId]);
 
   useEffect(() => {
     if (selectedBusinessId) {
@@ -75,7 +142,7 @@ export default function DisplayScreen({ businessId }: DisplayScreenProps = {}) {
 
     return () => {
       clearInterval(timeInterval);
-      supabase.channel('display-updates').unsubscribe();
+      supabase.removeAllChannels();
     };
   }, [selectedBusinessId]);
 
@@ -133,24 +200,24 @@ export default function DisplayScreen({ businessId }: DisplayScreenProps = {}) {
   }, [exchangeRates]);
 
   async function initializeBusinessId() {
-    logger.log('[DISPLAY] Initializing business ID...');
+    console.log('[DISPLAY] Initializing business ID...');
 
     if (businessId) {
-      logger.log('[DISPLAY] Using provided businessId:', businessId);
+      console.log('[DISPLAY] Using provided businessId:', businessId);
       setSelectedBusinessId(businessId);
       return;
     }
 
     const businessSession = sessionManager.getBusinessSession();
-    logger.log('[DISPLAY] Checking session:', businessSession);
+    console.log('[DISPLAY] Checking session:', businessSession);
 
     if (businessSession?.businessId) {
-      logger.log('[DISPLAY] Using session businessId:', businessSession.businessId);
+      console.log('[DISPLAY] Using session businessId:', businessSession.businessId);
       setSelectedBusinessId(businessSession.businessId);
       return;
     }
 
-    logger.log('[DISPLAY] No session found, will not load any business');
+    console.log('[DISPLAY] No session found, will not load any business');
     setSelectedBusinessId(null);
   }
 
@@ -195,7 +262,7 @@ export default function DisplayScreen({ businessId }: DisplayScreenProps = {}) {
     ]);
 
     if (ratesRes.data) {
-      logger.log('Sample rate with flag:', ratesRes.data[0]);
+      console.log('Sample rate with flag:', ratesRes.data[0]);
       setExchangeRates(ratesRes.data);
     }
     if (mediaRes.data) setMediaItems(mediaRes.data);
@@ -249,27 +316,27 @@ export default function DisplayScreen({ businessId }: DisplayScreenProps = {}) {
 
     channel
       .on('postgres_changes', { event: '*', schema: 'public', table: 'exchange_rates' }, (payload) => {
-        logger.log('Exchange rates changed:', payload);
+        console.log('Exchange rates changed:', payload);
         loadData();
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'media_items' }, (payload) => {
-        logger.log('Media items changed:', payload);
+        console.log('Media items changed:', payload);
         loadData();
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, (payload) => {
-        logger.log('Announcements changed:', payload);
+        console.log('Announcements changed:', payload);
         loadData();
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'service_logos' }, (payload) => {
-        logger.log('Service logos changed:', payload);
+        console.log('Service logos changed:', payload);
         loadData();
       })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'business_settings' }, (payload) => {
-        logger.log('Business settings changed:', payload);
+        console.log('Business settings changed:', payload);
         loadData();
       })
       .subscribe((status) => {
-        logger.log('Realtime subscription status:', status);
+        console.log('Realtime subscription status:', status);
       });
   }
 
@@ -350,8 +417,9 @@ function EmptyStateScreen() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 flex items-center justify-center p-8">
       <div className="text-center max-w-2xl">
         <div
-          className={`transition-all duration-400 ease-in-out transform ${isTransitioning ? 'opacity-0 scale-90' : 'opacity-100 scale-100'
-            }`}
+          className={`transition-all duration-400 ease-in-out transform ${
+            isTransitioning ? 'opacity-0 scale-90' : 'opacity-100 scale-100'
+          }`}
         >
           <div className="bg-blue-500/20 backdrop-blur-sm p-8 rounded-full w-32 h-32 mx-auto mb-8 flex items-center justify-center border border-blue-400/30 shadow-2xl shadow-blue-500/20">
             <CurrentIcon className="w-16 h-16 text-blue-300" />
@@ -362,8 +430,9 @@ function EmptyStateScreen() {
 
         <div className="h-24 flex items-center justify-center">
           <p
-            className={`text-2xl text-blue-200 transition-all duration-400 ease-in-out ${isTransitioning ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'
-              }`}
+            className={`text-2xl text-blue-200 transition-all duration-400 ease-in-out ${
+              isTransitioning ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'
+            }`}
           >
             {currentPhrase.phrases[currentLang]}
           </p>
@@ -373,8 +442,9 @@ function EmptyStateScreen() {
           {displayLanguages.map((lang, idx) => (
             <div
               key={lang}
-              className={`h-2 rounded-full transition-all duration-300 ${idx === currentLangIndex ? 'bg-blue-400 w-8' : 'bg-blue-600/50 w-2'
-                }`}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                idx === currentLangIndex ? 'bg-blue-400 w-8' : 'bg-blue-600/50 w-2'
+              }`}
             />
           ))}
         </div>
@@ -383,8 +453,9 @@ function EmptyStateScreen() {
           {rotatingPhrases.map((_, idx) => (
             <div
               key={idx}
-              className={`w-2 h-2 rounded-full transition-all duration-300 ${idx === currentPhraseIndex ? 'bg-white scale-125' : 'bg-white/30'
-                }`}
+              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                idx === currentPhraseIndex ? 'bg-white scale-125' : 'bg-white/30'
+              }`}
             />
           ))}
         </div>
@@ -529,7 +600,7 @@ function DisplayContent({
                   {getTranslation(language, 'exchangeRates')}
                 </h2>
               </div>
-              <div ref={scrollContainerRef} className="overflow-y-auto custom-scrollbar flex-1 px-1" style={{ scrollBehavior: 'auto' }}>
+              <div ref={scrollContainerRef} className="overflow-y-auto custom-scrollbar flex-1 px-1" style={{scrollBehavior: 'auto'}}>
                 <div className="space-y-1 py-2">
                   {countries.map((country, countryIndex) => {
                     const countryRates = groupedRates[country];
@@ -549,10 +620,11 @@ function DisplayContent({
                           return (
                             <div
                               key={rate.id}
-                              className={`px-4 py-4 flex justify-between items-center border-l-4 transition-all ${isBest
-                                ? 'bg-gradient-to-r from-amber-400/20 to-yellow-400/20 border-amber-500'
-                                : 'bg-white/5 border-white/10'
-                                }`}
+                              className={`px-4 py-4 flex justify-between items-center border-l-4 transition-all ${
+                                isBest
+                                  ? 'bg-gradient-to-r from-amber-400/20 to-yellow-400/20 border-amber-500'
+                                  : 'bg-white/5 border-white/10'
+                              }`}
                             >
                               <div className="flex-1">
                                 <p className={`text-xl font-semibold ${isBest ? 'text-yellow-300' : 'text-white'}`}>

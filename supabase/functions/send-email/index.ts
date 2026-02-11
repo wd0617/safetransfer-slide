@@ -24,7 +24,7 @@ Deno.serve(async (req: Request) => {
   try {
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     const FROM_EMAIL = Deno.env.get("FROM_EMAIL") || "onboarding@resend.dev";
-
+    
     if (!RESEND_API_KEY) {
       return new Response(
         JSON.stringify({ error: "RESEND_API_KEY not configured. Please set it in Supabase Edge Function secrets." }),
@@ -47,9 +47,9 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const fromEmail = from_name
+    const fromEmail = from_name 
       ? `${from_name} <${FROM_EMAIL}>`
-      : `SafeTransfer Slide <${FROM_EMAIL}>`;
+      : `MoneyTransfer Display <${FROM_EMAIL}>`;
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -70,8 +70,8 @@ Deno.serve(async (req: Request) => {
     if (!res.ok) {
       console.error("Resend API error:", JSON.stringify(data));
       return new Response(
-        JSON.stringify({
-          error: data.message || "Failed to send email",
+        JSON.stringify({ 
+          error: data.message || "Failed to send email", 
           details: data,
           statusCode: res.status
         }),

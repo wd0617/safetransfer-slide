@@ -14,7 +14,7 @@ import NotificationsPanel from './business/NotificationsPanel';
 import PaymentsPanel from './business/PaymentsPanel';
 import LegalModal from './LegalModal';
 
-import { APP_VERSION } from '../lib/constants';
+const APP_VERSION = '1.0.0';
 
 interface BusinessAdminPanelProps {
   onViewDisplay?: () => void;
@@ -117,15 +117,16 @@ export default function BusinessAdminPanel({ onViewDisplay }: BusinessAdminPanel
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-6 py-4 text-sm font-medium whitespace-nowrap transition-colors ${activeTab === tab.id
+                  className={`px-6 py-4 text-sm font-medium whitespace-nowrap transition-colors ${
+                    activeTab === tab.id
                       ? 'border-b-2 text-gray-900'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                    }`}
+                  }`}
                   style={
                     activeTab === tab.id
                       ? {
-                        borderColor: tab.id === 'superadmin' ? '#dc2626' : (business.primary_color || '#1e40af'),
-                      }
+                          borderColor: tab.id === 'superadmin' ? '#dc2626' : (business.primary_color || '#1e40af'),
+                        }
                       : {}
                   }
                 >

@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { logger } from '../lib/logger';
 import { supabase } from '../lib/supabase';
 import { sessionManager } from '../lib/sessionManager';
 import { Language } from '../lib/translations';
@@ -48,22 +47,22 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   const loadBusinessData = async () => {
-    logger.log('[CONTEXT] ===== loadBusinessData STARTED =====');
+    console.log('[CONTEXT] ===== loadBusinessData STARTED =====');
     let timeoutId: NodeJS.Timeout | null = null;
 
     try {
       const businessSession = sessionManager.getBusinessSession();
-      logger.log('[CONTEXT] Session from storage:', businessSession);
+      console.log('[CONTEXT] Session from storage:', businessSession);
 
       if (!businessSession) {
-        logger.log('[CONTEXT] No business session found, clearing state');
+        console.log('[CONTEXT] No business session found, clearing state');
         setBusiness(null);
         setAdmin(null);
         setLoading(false);
         return;
       }
 
-      logger.log('[CONTEXT] Setting loading to true, starting data fetch');
+      console.log('[CONTEXT] Setting loading to true, starting data fetch');
       setLoading(true);
 
       timeoutId = setTimeout(() => {
@@ -74,11 +73,11 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
         setLoading(false);
       }, 10000);
 
-      logger.log('[CONTEXT] Validating session with RPC...');
+      console.log('[CONTEXT] Validating session with RPC...');
       const { data: sessionValidation, error: sessionError } = await supabase.rpc('business_validate_session', {
         p_session_token: businessSession.sessionToken,
       });
-      logger.log('[CONTEXT] RPC validation result:', { sessionValidation, sessionError });
+      console.log('[CONTEXT] RPC validation result:', { sessionValidation, sessionError });
 
       if (sessionError) {
         console.error('[CONTEXT] Session validation RPC error:', sessionError);
@@ -100,7 +99,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      logger.log('[CONTEXT] Session validated, loading admin data...');
+      console.log('[CONTEXT] Session validated, loading admin data...');
 
       const { data: adminData, error: adminError } = await supabase
         .from('business_admins')
@@ -109,7 +108,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
         .eq('business_id', businessSession.businessId)
         .eq('is_active', true)
         .maybeSingle();
-      logger.log('[CONTEXT] Admin data result:', { adminData, adminError });
+      console.log('[CONTEXT] Admin data result:', { adminData, adminError });
 
       if (adminError) {
         console.error('[CONTEXT] Admin data load error:', adminError);
@@ -131,7 +130,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      logger.log('[CONTEXT] Admin data loaded, loading business data...');
+      console.log('[CONTEXT] Admin data loaded, loading business data...');
       setAdmin(adminData);
       setIsSuperAdmin(adminData.is_superadmin || false);
 
@@ -140,7 +139,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
         .select('*')
         .eq('id', businessSession.businessId)
         .maybeSingle();
-      logger.log('[CONTEXT] Business data result:', { businessData, businessError });
+      console.log('[CONTEXT] Business data result:', { businessData, businessError });
 
       if (businessError) {
         console.error('[CONTEXT] Business data load error:', businessError);
@@ -172,7 +171,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      logger.log('[CONTEXT] Business data loaded successfully');
+      console.log('[CONTEXT] Business data loaded successfully');
       setBusiness(businessData);
 
       const { data: settingsData } = await supabase
@@ -180,7 +179,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
         .select('language')
         .eq('business_id', businessSession.businessId)
         .maybeSingle();
-      logger.log('[CONTEXT] Settings data loaded:', settingsData);
+      console.log('[CONTEXT] Settings data loaded:', settingsData);
 
       if (settingsData?.language) {
         setLanguage(settingsData.language as Language);
@@ -192,7 +191,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
 
       if (timeoutId) clearTimeout(timeoutId);
       setLoading(false);
-      logger.log('[CONTEXT] ===== loadBusinessData COMPLETED SUCCESSFULLY =====');
+      console.log('[CONTEXT] ===== loadBusinessData COMPLETED SUCCESSFULLY =====');
     } catch (error) {
       console.error('[CONTEXT] Unexpected error loading business data:', error);
       if (timeoutId) clearTimeout(timeoutId);
@@ -204,13 +203,13 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    logger.log('[CONTEXT] Initial useEffect triggered, checking session...');
+    console.log('[CONTEXT] Initial useEffect triggered, checking session...');
     const session = sessionManager.getBusinessSession();
     if (session) {
-      logger.log('[CONTEXT] Session exists, loading data...');
+      console.log('[CONTEXT] Session exists, loading data...');
       loadBusinessData();
     } else {
-      logger.log('[CONTEXT] No session, skipping data load');
+      console.log('[CONTEXT] No session, skipping data load');
     }
   }, []);
 
@@ -269,7 +268,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       const elapsedTime = currentTime - loginTime;
 
       if (elapsedTime >= TWELVE_HOURS) {
-        logger.log('Session expired after 12 hours');
+        console.log('Session expired after 12 hours');
         signOut();
       }
     };
@@ -280,7 +279,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
   }, [loginTime, admin]);
 
   const signOut = async () => {
-    logger.log('[CONTEXT] Sign out initiated');
+    console.log('[CONTEXT] Sign out initiated');
     sessionManager.clearBusinessSession();
 
     const superAdminSession = sessionManager.getSuperAdminSession();
@@ -292,7 +291,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
     setAdmin(null);
     setLoginTime(null);
     setIsSuperAdmin(false);
-    logger.log('[CONTEXT] Session cleared, state reset');
+    console.log('[CONTEXT] Session cleared, state reset');
   };
 
   const refreshBusiness = async () => {

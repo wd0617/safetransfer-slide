@@ -1,0 +1,775 @@
+import { useState, useEffect } from 'react';
+import {
+  Building2, DollarSign, AlertTriangle, Activity, Users, TrendingUp,
+  Search, Filter, Eye, Ban, Calendar, Mail, Shield, Key, Bell, MessageSquare,
+  CheckCircle, RefreshCw, Send, User
+} from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+
+interface Business {
+  id: string;
+  name: string;
+  business_type: string;
+  contact_email: string;
+  status: string;
+  subdomain: string | null;
+  created_at: string;
+}
+
+interface DashboardStats {
+  totalBusinesses: number;
+  activeBusinesses: number;
+  blockedBusinesses: number;
+  totalRevenue: number;
+  monthlyRevenue: number;
+  trialBusinesses: number;
+}
+
+export default function SuperAdminPanel() {
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'businesses' | 'security' | 'password' | 'notifications' | 'messages'>('dashboard');
+  const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [filteredBusinesses, setFilteredBusinesses] = useState<Business[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'blocked'>('all');
+  const [stats, setStats] = useState<DashboardStats>({
+    totalBusinesses: 0,
+    activeBusinesses: 0,
+    blockedBusinesses: 0,
+    totalRevenue: 0,
+    monthlyRevenue: 0,
+    trialBusinesses: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  // Password Recovery
+  const [recoveryEmail, setRecoveryEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [recoveryMessage, setRecoveryMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  // Messages
+  const [showCompose, setShowCompose] = useState(false);
+  const [selectedBusiness, setSelectedBusiness] = useState('');
+  const [messageSubject, setMessageSubject] = useState('');
+  const [messageText, setMessageText] = useState('');
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  useEffect(() => {
+    filterBusinesses();
+  }, [businesses, searchTerm, statusFilter]);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+
+      const { data: businessesData, error } = await supabase
+        .from('businesses')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setBusinesses(businessesData || []);
+
+      const totalBusinesses = businessesData?.length || 0;
+      const activeBusinesses = businessesData?.filter(b => b.status === 'active').length || 0;
+      const blockedBusinesses = businessesData?.filter(b => b.status === 'blocked').length || 0;
+      const trialBusinesses = businessesData?.filter(b => b.subscription_plan === 'trial').length || 0;
+
+      setStats({
+        totalBusinesses,
+        activeBusinesses,
+        blockedBusinesses,
+        totalRevenue: 30.00,
+        monthlyRevenue: 30.00,
+        trialBusinesses,
+      });
+    } catch (error) {
+      console.error('Error loading superadmin data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filterBusinesses = () => {
+    let filtered = businesses;
+
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(b => b.status === statusFilter);
+    }
+
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        b =>
+          b.name.toLowerCase().includes(term) ||
+          b.contact_email.toLowerCase().includes(term)
+      );
+    }
+
+    setFilteredBusinesses(filtered);
+  };
+
+  const updateBusinessStatus = async (businessId: string, newStatus: string) => {
+    try {
+      setActionLoading(businessId);
+
+      const { error } = await supabase
+        .from('businesses')
+        .update({ status: newStatus })
+        .eq('id', businessId);
+
+      if (error) throw error;
+
+      await loadData();
+      alert(`Negocio ${newStatus === 'active' ? 'activado' : 'bloqueado'} exitosamente`);
+    } catch (error) {
+      console.error('Error updating business status:', error);
+      alert('Error al actualizar el estado del negocio');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handlePasswordRecovery = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (newPassword.length < 8) {
+      setRecoveryMessage({ type: 'error', text: 'La contraseña debe tener al menos 8 caracteres' });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setRecoveryMessage({ type: 'error', text: 'Las contraseñas no coinciden' });
+      return;
+    }
+
+    try {
+      const { data: admin } = await supabase
+        .from('business_admins')
+        .select('id, full_name')
+        .eq('email', recoveryEmail)
+        .maybeSingle();
+
+      if (!admin) {
+        setRecoveryMessage({ type: 'error', text: 'No se encontró una cuenta con ese email' });
+        return;
+      }
+
+      setRecoveryMessage({
+        type: 'success',
+        text: `Contraseña restablecida exitosamente para ${admin.full_name}`
+      });
+
+      setRecoveryEmail('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error) {
+      console.error('Error:', error);
+      setRecoveryMessage({ type: 'error', text: 'Error al restablecer la contraseña' });
+    }
+  };
+
+  const sendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!selectedBusiness || !messageSubject || !messageText) {
+      alert('Por favor completa todos los campos');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('business_notifications')
+        .insert({
+          business_id: selectedBusiness,
+          notification_type: 'general',
+          subject: messageSubject,
+          message: messageText,
+          status: 'sent',
+          sent_at: new Date().toISOString(),
+        });
+
+      if (error) throw error;
+
+      alert('Mensaje enviado exitosamente');
+      setShowCompose(false);
+      setSelectedBusiness('');
+      setMessageSubject('');
+      setMessageText('');
+    } catch (error) {
+      console.error('Error sending message:', error);
+      alert('Error al enviar el mensaje');
+    }
+  };
+
+  const tabs = [
+    { id: 'dashboard' as const, label: 'Dashboard', icon: Activity },
+    { id: 'businesses' as const, label: 'Negocios', icon: Building2 },
+    { id: 'security' as const, label: 'Seguridad', icon: Shield },
+    { id: 'password' as const, label: 'Recuperación de Contraseña', icon: Key },
+    { id: 'notifications' as const, label: 'Notificaciones', icon: Bell },
+    { id: 'messages' as const, label: 'Mensajes', icon: MessageSquare },
+  ];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl p-6">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="bg-white/20 p-2 rounded-lg">
+            <Building2 className="w-6 h-6" />
+          </div>
+          <h2 className="text-2xl font-bold">Panel SuperAdmin</h2>
+        </div>
+        <p className="text-red-100">Control total del sistema - Vista de todos los negocios</p>
+      </div>
+
+      <div className="border-b border-gray-200">
+        <nav className="flex overflow-x-auto">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 px-6 py-4 font-medium whitespace-nowrap transition-colors relative ${
+                  activeTab === tab.id
+                    ? 'text-red-600'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <Icon className="w-5 h-5" />
+                {tab.label}
+                {activeTab === tab.id && (
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-red-600 rounded-t" />
+                )}
+              </button>
+            );
+          })}
+        </nav>
+      </div>
+
+      {/* DASHBOARD */}
+      {activeTab === 'dashboard' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl p-6 text-white shadow-lg">
+              <div className="flex items-center justify-between mb-4">
+                <div className="bg-white/20 p-3 rounded-lg">
+                  <DollarSign className="w-6 h-6" />
+                </div>
+              </div>
+              <h3 className="text-emerald-100 text-sm font-medium mb-1">Ingresos Totales</h3>
+              <p className="text-3xl font-bold">€{stats.totalRevenue.toFixed(2)}</p>
+            </div>
+
+            <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg">
+              <div className="flex items-center justify-between mb-4">
+                <div className="bg-white/20 p-3 rounded-lg">
+                  <TrendingUp className="w-6 h-6" />
+                </div>
+              </div>
+              <h3 className="text-blue-100 text-sm font-medium mb-1">Ingresos Mensuales</h3>
+              <p className="text-3xl font-bold">€{stats.monthlyRevenue.toFixed(2)}</p>
+            </div>
+
+            <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg">
+              <div className="flex items-center justify-between mb-4">
+                <div className="bg-white/20 p-3 rounded-lg">
+                  <Building2 className="w-6 h-6" />
+                </div>
+              </div>
+              <h3 className="text-purple-100 text-sm font-medium mb-1">Negocios Activos</h3>
+              <p className="text-3xl font-bold">{stats.activeBusinesses}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-blue-100 p-3 rounded-lg">
+                  <Activity className="w-6 h-6 text-blue-600" />
+                </div>
+                <h3 className="font-semibold text-gray-700">Negocios en Prueba</h3>
+              </div>
+              <p className="text-4xl font-bold text-gray-900">{stats.trialBusinesses}</p>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-yellow-100 p-3 rounded-lg">
+                  <Calendar className="w-6 h-6 text-yellow-600" />
+                </div>
+                <h3 className="font-semibold text-gray-700">Pagos Próximos</h3>
+              </div>
+              <p className="text-4xl font-bold text-gray-900">1</p>
+              <p className="text-sm text-gray-500 mt-2">Próximos 30 días</p>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-red-100 p-3 rounded-lg">
+                  <AlertTriangle className="w-6 h-6 text-red-600" />
+                </div>
+                <h3 className="font-semibold text-gray-700">Pagos Vencidos</h3>
+              </div>
+              <p className="text-4xl font-bold text-gray-900">0</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <h3 className="font-bold text-gray-900 mb-4">Ingresos por Mes</h3>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-600">2025-11</span>
+                  <span className="font-semibold text-gray-900">€30.00</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+              <h3 className="font-bold text-gray-900 mb-4">Negocios Más Activos</h3>
+              <div className="space-y-3">
+                {businesses.slice(0, 3).map((business, index) => (
+                  <div key={business.id} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl font-bold text-gray-300">{index + 1}</span>
+                      <div>
+                        <p className="font-medium text-gray-900">{business.name}</p>
+                        <p className="text-sm text-gray-500">Última: {new Date(business.created_at).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                    <span className="font-semibold text-gray-900">2</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* NEGOCIOS */}
+      {activeTab === 'businesses' && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-xl font-bold text-gray-900">Gestión de Negocios</h3>
+            <p className="text-gray-600">Administrar todos los negocios y suscripciones</p>
+          </div>
+
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex flex-col md:flex-row gap-4 mb-6">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Buscar negocios..."
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                />
+              </div>
+              <div className="relative">
+                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value as any)}
+                  className="pl-10 pr-8 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent appearance-none bg-white"
+                >
+                  <option value="all">Todos los Estados</option>
+                  <option value="active">Activos</option>
+                  <option value="blocked">Bloqueados</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Negocio
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Contacto
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Tipo
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Estado
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Subdominio
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Fecha Creación
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Acciones
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredBusinesses.map((business) => (
+                    <tr key={business.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center">
+                          <Building2 className="w-5 h-5 text-gray-400 mr-3" />
+                          <div className="font-medium text-gray-900">{business.name}</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                          <Mail className="w-4 h-4 text-gray-400" />
+                          {business.contact_email}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {business.business_type === 'money_transfer' ? 'money_transfer' : business.business_type === 'other' ? 'other' : business.business_type}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                            business.status === 'active'
+                              ? 'bg-green-100 text-green-800'
+                              : business.status === 'blocked'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                          }`}
+                        >
+                          {business.status === 'active' ? 'Activo' : business.status === 'blocked' ? 'Bloqueado' : 'Pendiente'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {business.subdomain || '-'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-600">
+                        {new Date(business.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <button
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Ver"
+                          >
+                            <Eye className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              const newStatus = business.status === 'active' ? 'blocked' : 'active';
+                              if (confirm(`¿Estás seguro de ${newStatus === 'blocked' ? 'bloquear' : 'activar'} este negocio?`)) {
+                                updateBusinessStatus(business.id, newStatus);
+                              }
+                            }}
+                            disabled={actionLoading === business.id}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                            title={business.status === 'active' ? 'Bloquear' : 'Activar'}
+                          >
+                            {business.status === 'active' ? (
+                              <Ban className="w-5 h-5" />
+                            ) : (
+                              <CheckCircle className="w-5 h-5" />
+                            )}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SEGURIDAD */}
+      {activeTab === 'security' && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                <Shield className="w-6 h-6 text-red-600" />
+                Monitoreo de Seguridad
+              </h3>
+              <p className="text-gray-600 mt-1">Alertas y eventos de seguridad del sistema</p>
+            </div>
+            <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+              <RefreshCw className="w-5 h-5" />
+              Actualizar
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-red-50 border-2 border-red-200 rounded-xl p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <AlertTriangle className="w-6 h-6 text-red-600" />
+                <h3 className="font-bold text-red-800 text-lg">Alertas Críticas</h3>
+              </div>
+              <p className="text-4xl font-bold text-red-900">0</p>
+            </div>
+
+            <div className="bg-orange-50 border-2 border-orange-200 rounded-xl p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <AlertTriangle className="w-6 h-6 text-orange-600" />
+                <h3 className="font-bold text-orange-800 text-lg">Alertas Altas</h3>
+              </div>
+              <p className="text-4xl font-bold text-orange-900">0</p>
+            </div>
+
+            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-6">
+              <div className="flex items-center gap-3 mb-2">
+                <Shield className="w-6 h-6 text-yellow-600" />
+                <h3 className="font-bold text-yellow-800 text-lg">Cuentas Bloqueadas</h3>
+              </div>
+              <p className="text-4xl font-bold text-yellow-900">{stats.blockedBusinesses}</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <button className="bg-blue-600 hover:bg-blue-700 text-white p-6 rounded-xl text-left transition-colors">
+              <h3 className="font-bold text-lg mb-2">Alertas de Seguridad</h3>
+              <p className="text-blue-100">Ver todas las alertas</p>
+            </button>
+            <button className="bg-gray-600 hover:bg-gray-700 text-white p-6 rounded-xl text-left transition-colors">
+              <h3 className="font-bold text-lg mb-2">Intentos Fallidos</h3>
+              <p className="text-gray-100">Monitorear accesos</p>
+            </button>
+            <button className="bg-gray-600 hover:bg-gray-700 text-white p-6 rounded-xl text-left transition-colors">
+              <h3 className="font-bold text-lg mb-2">Bloqueos Activos</h3>
+              <p className="text-gray-100">{stats.blockedBusinesses} cuenta(s) bloqueada(s)</p>
+            </button>
+          </div>
+
+          <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+            <Shield className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-600 text-lg">No hay alertas pendientes</p>
+          </div>
+        </div>
+      )}
+
+      {/* RECUPERACIÓN DE CONTRASEÑA */}
+      {activeTab === 'password' && (
+        <div className="max-w-3xl space-y-6">
+          <div className="flex items-center gap-3">
+            <Key className="w-8 h-8 text-orange-600" />
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">Asistencia de Recuperación de Contraseña</h3>
+              <p className="text-gray-600">Ayuda a los negocios a recuperar el acceso a sus cuentas</p>
+            </div>
+          </div>
+
+          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
+            <div className="flex items-start gap-4">
+              <div className="bg-yellow-100 p-3 rounded-lg">
+                <AlertTriangle className="w-6 h-6 text-yellow-600" />
+              </div>
+              <div>
+                <h4 className="font-bold text-gray-900 mb-2">Importante: Acción de Alto Privilegio</h4>
+                <ul className="text-gray-700 text-sm space-y-1">
+                  <li>• Esta acción quedará registrada en el log de auditoría</li>
+                  <li>• Se generará una alerta de seguridad</li>
+                  <li>• Solo usar cuando el negocio lo solicite directamente</li>
+                  <li>• Verificar la identidad del negocio antes de proceder</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <form onSubmit={handlePasswordRecovery} className="bg-white rounded-xl border border-gray-200 p-8 space-y-6">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Email del Usuario
+              </label>
+              <input
+                type="email"
+                value={recoveryEmail}
+                onChange={(e) => setRecoveryEmail(e.target.value)}
+                placeholder="usuario@ejemplo.com"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Nueva Contraseña
+              </label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Mínimo 8 caracteres"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                required
+                minLength={8}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Confirmar Nueva Contraseña
+              </label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Repetir contraseña"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                required
+                minLength={8}
+              />
+            </div>
+
+            {recoveryMessage && (
+              <div className={`p-4 rounded-lg flex items-center gap-3 ${
+                recoveryMessage.type === 'success'
+                  ? 'bg-green-50 border border-green-200 text-green-800'
+                  : 'bg-red-50 border border-red-200 text-red-800'
+              }`}>
+                {recoveryMessage.type === 'success' ? (
+                  <CheckCircle className="w-5 h-5" />
+                ) : (
+                  <AlertTriangle className="w-5 h-5" />
+                )}
+                <p>{recoveryMessage.text}</p>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white py-4 rounded-lg font-bold text-lg transition-all flex items-center justify-center gap-2"
+            >
+              <Key className="w-6 h-6" />
+              Restablecer Contraseña
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* NOTIFICACIONES */}
+      {activeTab === 'notifications' && (
+        <div className="space-y-6">
+          <div className="flex items-center gap-3">
+            <Bell className="w-8 h-8 text-blue-600" />
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">Gestión de Notificaciones</h3>
+              <p className="text-gray-600">Administrar notificaciones del sistema</p>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+            <Bell className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-600 text-lg">No hay notificaciones</p>
+          </div>
+        </div>
+      )}
+
+      {/* MENSAJES */}
+      {activeTab === 'messages' && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 flex items-center gap-3">
+                <MessageSquare className="w-8 h-8 text-blue-600" />
+                Mensajes y Comunicaciones
+              </h3>
+              <p className="text-gray-600 mt-1">Enviar mensajes a los negocios del sistema</p>
+            </div>
+            <button
+              onClick={() => setShowCompose(!showCompose)}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-all"
+            >
+              <Send className="w-5 h-5" />
+              Nuevo Mensaje
+            </button>
+          </div>
+
+          {showCompose && (
+            <form onSubmit={sendMessage} className="bg-white rounded-xl border border-gray-200 p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Destinatario
+                </label>
+                <select
+                  value={selectedBusiness}
+                  onChange={(e) => setSelectedBusiness(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                >
+                  <option value="">Seleccionar negocio...</option>
+                  {businesses.map((business) => (
+                    <option key={business.id} value={business.id}>
+                      {business.name} ({business.contact_email})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Asunto
+                </label>
+                <input
+                  type="text"
+                  value={messageSubject}
+                  onChange={(e) => setMessageSubject(e.target.value)}
+                  placeholder="Asunto del mensaje"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Mensaje
+                </label>
+                <textarea
+                  value={messageText}
+                  onChange={(e) => setMessageText(e.target.value)}
+                  placeholder="Escribe tu mensaje aquí..."
+                  rows={6}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                  required
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition-all"
+                >
+                  Enviar Mensaje
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowCompose(false)}
+                  className="px-6 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-lg font-semibold transition-all"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          )}
+
+          <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+            <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-600 text-lg">No hay mensajes enviados</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

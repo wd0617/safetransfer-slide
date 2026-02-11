@@ -10,7 +10,7 @@ const emailTranslations = {
     codeExpiresIn: 'Este codigo expira en',
     minutes: 'minutos',
     ifNotCreatedAccount: 'Si no creaste esta cuenta, ignora este mensaje.',
-    automaticMessage: 'Este es un mensaje automatico del sistema SafeTransfer Slide.',
+    automaticMessage: 'Este es un mensaje automatico del sistema MoneyTransfer Display.',
     dontShareCode: 'No compartas este codigo con nadie.',
     verificationCode: 'Codigo de Verificacion',
     passwordRecoveryApproved: 'Solicitud de Contrasena Aprobada',
@@ -33,7 +33,7 @@ const emailTranslations = {
     business: 'Negocio',
     email: 'Email',
     replyFromSuperAdminPanel: 'Responde desde el panel de SuperAdmin.',
-    supportMessageFrom: 'Mensaje de soporte del sistema SafeTransfer Slide.',
+    supportMessageFrom: 'Mensaje de soporte del sistema MoneyTransfer Display.',
     youRequestedPasswordReset: 'Has solicitado restablecer tu contrasena. Usa el siguiente codigo de verificacion:',
     stepsToComplete: 'Pasos para completar el cambio:',
     step1: 'Ve a la pagina de recuperacion de contrasena',
@@ -45,7 +45,7 @@ const emailTranslations = {
     passwordRecoveryRequestReceived: 'Se ha recibido una nueva solicitud de recuperacion de contrasena:',
     administrator: 'Administrador',
     reviewFromSuperAdminPanel: 'Revisa y aprueba o rechaza esta solicitud desde el panel de SuperAdmin.',
-    requestFromSystem: 'Solicitud del sistema SafeTransfer Slide.',
+    requestFromSystem: 'Solicitud del sistema MoneyTransfer Display.',
     newNotification: 'Nueva Notificacion',
   },
   en: {
@@ -57,7 +57,7 @@ const emailTranslations = {
     codeExpiresIn: 'This code expires in',
     minutes: 'minutes',
     ifNotCreatedAccount: 'If you did not create this account, ignore this message.',
-    automaticMessage: 'This is an automatic message from SafeTransfer Slide system.',
+    automaticMessage: 'This is an automatic message from MoneyTransfer Display system.',
     dontShareCode: 'Do not share this code with anyone.',
     verificationCode: 'Verification Code',
     passwordRecoveryApproved: 'Password Request Approved',
@@ -80,7 +80,7 @@ const emailTranslations = {
     business: 'Business',
     email: 'Email',
     replyFromSuperAdminPanel: 'Reply from the SuperAdmin panel.',
-    supportMessageFrom: 'Support message from SafeTransfer Slide system.',
+    supportMessageFrom: 'Support message from MoneyTransfer Display system.',
     youRequestedPasswordReset: 'You have requested to reset your password. Use the following verification code:',
     stepsToComplete: 'Steps to complete the change:',
     step1: 'Go to the password recovery page',
@@ -92,7 +92,7 @@ const emailTranslations = {
     passwordRecoveryRequestReceived: 'A new password recovery request has been received:',
     administrator: 'Administrator',
     reviewFromSuperAdminPanel: 'Review and approve or reject this request from the SuperAdmin panel.',
-    requestFromSystem: 'Request from SafeTransfer Slide system.',
+    requestFromSystem: 'Request from MoneyTransfer Display system.',
     newNotification: 'New Notification',
   },
   it: {
@@ -104,7 +104,7 @@ const emailTranslations = {
     codeExpiresIn: 'Questo codice scade tra',
     minutes: 'minuti',
     ifNotCreatedAccount: 'Se non hai creato questo account, ignora questo messaggio.',
-    automaticMessage: 'Questo e un messaggio automatico del sistema SafeTransfer Slide.',
+    automaticMessage: 'Questo e un messaggio automatico del sistema MoneyTransfer Display.',
     dontShareCode: 'Non condividere questo codice con nessuno.',
     verificationCode: 'Codice di Verifica',
     passwordRecoveryApproved: 'Richiesta Password Approvata',
@@ -127,7 +127,7 @@ const emailTranslations = {
     business: 'Attivita',
     email: 'Email',
     replyFromSuperAdminPanel: 'Rispondi dal pannello SuperAdmin.',
-    supportMessageFrom: 'Messaggio di supporto dal sistema SafeTransfer Slide.',
+    supportMessageFrom: 'Messaggio di supporto dal sistema MoneyTransfer Display.',
     youRequestedPasswordReset: 'Hai richiesto di reimpostare la password. Usa il seguente codice di verifica:',
     stepsToComplete: 'Passaggi per completare il cambio:',
     step1: 'Vai alla pagina di recupero password',
@@ -139,7 +139,7 @@ const emailTranslations = {
     passwordRecoveryRequestReceived: 'E stata ricevuta una nuova richiesta di recupero password:',
     administrator: 'Amministratore',
     reviewFromSuperAdminPanel: 'Esamina e approva o rifiuta questa richiesta dal pannello SuperAdmin.',
-    requestFromSystem: 'Richiesta dal sistema SafeTransfer Slide.',
+    requestFromSystem: 'Richiesta dal sistema MoneyTransfer Display.',
     newNotification: 'Nuova Notifica',
   },
 };
@@ -209,7 +209,7 @@ export const localizedEmailTemplates = {
       </div>
       <div class="content">
         <div class="welcome">
-          <p style="margin:0;font-size:18px;">${t(lang, 'welcomeTo')} <strong>SafeTransfer Slide</strong></p>
+          <p style="margin:0;font-size:18px;">${t(lang, 'welcomeTo')} <strong>MoneyTransfer Display</strong></p>
         </div>
         <p>${t(lang, 'hello')} <strong>${businessName}</strong>,</p>
         <p>${t(lang, 'thanksForRegistering')}</p>
@@ -454,14 +454,14 @@ export const localizedEmailTemplates = {
 export function getEmailSubject(type: string, lang: EmailLanguage = 'es'): string {
   const subjects: Record<string, Record<EmailLanguage, string>> = {
     verification: {
-      es: 'Verifica tu Email - SafeTransfer Slide',
-      en: 'Verify your Email - SafeTransfer Slide',
-      it: 'Verifica la tua Email - SafeTransfer Slide',
+      es: 'Verifica tu Email - MoneyTransfer Display',
+      en: 'Verify your Email - MoneyTransfer Display',
+      it: 'Verifica la tua Email - MoneyTransfer Display',
     },
     passwordReset: {
-      es: 'Codigo de Verificacion - SafeTransfer Slide',
-      en: 'Verification Code - SafeTransfer Slide',
-      it: 'Codice di Verifica - SafeTransfer Slide',
+      es: 'Codigo de Verificacion - MoneyTransfer Display',
+      en: 'Verification Code - MoneyTransfer Display',
+      it: 'Codice di Verifica - MoneyTransfer Display',
     },
     passwordApproved: {
       es: 'Solicitud de Contrasena Aprobada',
@@ -485,5 +485,5 @@ export function getEmailSubject(type: string, lang: EmailLanguage = 'es'): strin
     },
   };
 
-  return subjects[type]?.[lang] || subjects[type]?.es || 'SafeTransfer Slide';
+  return subjects[type]?.[lang] || subjects[type]?.es || 'MoneyTransfer Display';
 }

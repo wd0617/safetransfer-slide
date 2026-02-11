@@ -121,7 +121,7 @@ export default function BusinessSettingsManager({ businessId = '' }: BusinessSet
           body: JSON.stringify({
             bot_token: superadmin.telegram_bot_token,
             chat_id: telegramChatId,
-            message: `<b>Prueba Exitosa</b>\n\nHola <b>${businessName || 'Negocio'}</b>,\n\nTu cuenta de Telegram ha sido configurada correctamente.\n\nAhora recibiras notificaciones importantes aqui.\n\n<i>SafeTransfer Slide</i>`,
+            message: `<b>Prueba Exitosa</b>\n\nHola <b>${businessName || 'Negocio'}</b>,\n\nTu cuenta de Telegram ha sido configurada correctamente.\n\nAhora recibiras notificaciones importantes aqui.\n\n<i>MoneyTransfer Display</i>`,
             parse_mode: 'HTML',
           }),
         }
@@ -134,9 +134,9 @@ export default function BusinessSettingsManager({ businessId = '' }: BusinessSet
       }
 
       setTelegramMessage({ type: 'success', text: 'Mensaje de prueba enviado correctamente' });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error testing telegram:', error);
-      setTelegramMessage({ type: 'error', text: error instanceof Error ? error.message : 'Error al enviar mensaje de prueba' });
+      setTelegramMessage({ type: 'error', text: error.message || 'Error al enviar mensaje de prueba' });
     } finally {
       setTestingTelegram(false);
     }
@@ -193,9 +193,9 @@ export default function BusinessSettingsManager({ businessId = '' }: BusinessSet
 
       alert(getTranslation(contextLanguage, 'logoUploadedSuccessfully'));
       loadSettings();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading logo:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      const errorMessage = error?.message || 'Error desconocido';
       alert(`${getTranslation(contextLanguage, 'errorUploadingLogo')}: ${errorMessage}`);
     } finally {
       setUploading(false);
@@ -442,10 +442,11 @@ export default function BusinessSettingsManager({ businessId = '' }: BusinessSet
               </div>
 
               {telegramMessage && (
-                <div className={`p-3 rounded-lg flex items-center gap-2 ${telegramMessage.type === 'success'
+                <div className={`p-3 rounded-lg flex items-center gap-2 ${
+                  telegramMessage.type === 'success'
                     ? 'bg-green-100 text-green-800 border border-green-200'
                     : 'bg-red-100 text-red-800 border border-red-200'
-                  }`}>
+                }`}>
                   {telegramMessage.type === 'success' ? (
                     <CheckCircle className="w-4 h-4" />
                   ) : (
@@ -468,10 +469,11 @@ export default function BusinessSettingsManager({ businessId = '' }: BusinessSet
                   key={theme.id}
                   type="button"
                   onClick={() => setColorTheme(theme.id)}
-                  className={`relative p-3 rounded-xl border-2 transition-all hover:scale-105 ${colorTheme === theme.id
+                  className={`relative p-3 rounded-xl border-2 transition-all hover:scale-105 ${
+                    colorTheme === theme.id
                       ? 'border-blue-600 ring-2 ring-blue-200'
                       : 'border-slate-200 hover:border-slate-300'
-                    }`}
+                  }`}
                 >
                   <div className="flex flex-col gap-2">
                     <div className="flex gap-1 h-8">
@@ -499,10 +501,11 @@ export default function BusinessSettingsManager({ businessId = '' }: BusinessSet
               <button
                 type="button"
                 onClick={() => setColorTheme('custom')}
-                className={`relative p-3 rounded-xl border-2 transition-all hover:scale-105 ${colorTheme === 'custom'
+                className={`relative p-3 rounded-xl border-2 transition-all hover:scale-105 ${
+                  colorTheme === 'custom'
                     ? 'border-blue-600 ring-2 ring-blue-200'
                     : 'border-slate-200 hover:border-slate-300'
-                  }`}
+                }`}
               >
                 <div className="flex flex-col gap-2">
                   <div className="flex gap-1 h-8">

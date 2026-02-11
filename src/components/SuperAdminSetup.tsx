@@ -61,9 +61,9 @@ export default function SuperAdminSetup() {
 
         setStep('success');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error:', err);
-      setErrorMessage(err instanceof Error ? err.message : 'Error al crear el SuperAdmin');
+      setErrorMessage(err.message || 'Error al crear el SuperAdmin');
       setStep('error');
     } finally {
       setLoading(false);

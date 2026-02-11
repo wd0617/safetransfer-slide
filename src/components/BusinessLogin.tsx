@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { ShieldOff, ArrowLeft } from 'lucide-react';
+import { ShieldOff, ArrowLeft, DollarSign, Globe, BarChart3, Megaphone, Image, Clock, Palette, Bell } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { sessionManager } from '../lib/sessionManager';
 import { getTranslation, Language } from '../lib/translations';
-import { rotatingPhrases } from '../lib/constants';
 
 interface BusinessLoginProps {
   onLoginSuccess: () => void;
@@ -13,6 +12,73 @@ interface BusinessLoginProps {
   onHideDeactivatedMessage: () => void;
   onPasswordRecoveryClick: () => void;
 }
+
+const rotatingPhrases = [
+  {
+    icon: DollarSign,
+    phrases: {
+      es: 'Gestiona tasas de cambio en tiempo real',
+      en: 'Manage exchange rates in real time',
+      it: 'Gestisci i tassi di cambio in tempo reale'
+    }
+  },
+  {
+    icon: Globe,
+    phrases: {
+      es: 'Soporte multiidioma: Español, Inglés, Italiano',
+      en: 'Multi-language support: Spanish, English, Italian',
+      it: 'Supporto multilingua: Spagnolo, Inglese, Italiano'
+    }
+  },
+  {
+    icon: BarChart3,
+    phrases: {
+      es: 'Muestra las mejores tasas automaticamente',
+      en: 'Display best rates automatically',
+      it: 'Mostra automaticamente le migliori tariffe'
+    }
+  },
+  {
+    icon: Megaphone,
+    phrases: {
+      es: 'Publica anuncios y promociones',
+      en: 'Publish announcements and promotions',
+      it: 'Pubblica annunci e promozioni'
+    }
+  },
+  {
+    icon: Image,
+    phrases: {
+      es: 'Carrusel multimedia con imagenes y videos',
+      en: 'Multimedia carousel with images and videos',
+      it: 'Carosello multimediale con immagini e video'
+    }
+  },
+  {
+    icon: Clock,
+    phrases: {
+      es: 'Actualiza horarios y clima en vivo',
+      en: 'Update schedules and live weather',
+      it: 'Aggiorna orari e meteo in tempo reale'
+    }
+  },
+  {
+    icon: Palette,
+    phrases: {
+      es: 'Personaliza colores y temas',
+      en: 'Customize colors and themes',
+      it: 'Personalizza colori e temi'
+    }
+  },
+  {
+    icon: Bell,
+    phrases: {
+      es: 'Notificaciones y soporte integrado',
+      en: 'Integrated notifications and support',
+      it: 'Notifiche e supporto integrato'
+    }
+  }
+];
 
 const languages: Language[] = ['es', 'en', 'it'];
 
@@ -163,8 +229,9 @@ export default function BusinessLogin({ onLoginSuccess, onRegisterClick, onBack,
 
         <div className="relative z-10 text-center max-w-lg">
           <div
-            className={`transition-all duration-300 ease-in-out transform ${isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
-              }`}
+            className={`transition-all duration-300 ease-in-out transform ${
+              isTransitioning ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
+            }`}
           >
             <div className="bg-blue-500/20 backdrop-blur-sm p-6 rounded-full w-24 h-24 mx-auto mb-8 flex items-center justify-center border border-blue-400/30">
               <CurrentIcon className="w-12 h-12 text-blue-300" />
@@ -177,8 +244,9 @@ export default function BusinessLogin({ onLoginSuccess, onRegisterClick, onBack,
 
           <div className="h-20 flex items-center justify-center">
             <p
-              className={`text-xl text-blue-200 transition-all duration-300 ease-in-out ${isTransitioning ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'
-                }`}
+              className={`text-xl text-blue-200 transition-all duration-300 ease-in-out ${
+                isTransitioning ? 'opacity-0 translate-y-2' : 'opacity-100 translate-y-0'
+              }`}
             >
               {currentPhrase.phrases[currentLang]}
             </p>
@@ -188,8 +256,9 @@ export default function BusinessLogin({ onLoginSuccess, onRegisterClick, onBack,
             {languages.map((lang, idx) => (
               <div
                 key={lang}
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${idx === currentLangIndex ? 'bg-blue-400 w-6' : 'bg-blue-600/50'
-                  }`}
+                className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                  idx === currentLangIndex ? 'bg-blue-400 w-6' : 'bg-blue-600/50'
+                }`}
               />
             ))}
           </div>
@@ -198,8 +267,9 @@ export default function BusinessLogin({ onLoginSuccess, onRegisterClick, onBack,
             {rotatingPhrases.map((_, idx) => (
               <div
                 key={idx}
-                className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${idx === currentPhraseIndex ? 'bg-white' : 'bg-white/30'
-                  }`}
+                className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                  idx === currentPhraseIndex ? 'bg-white' : 'bg-white/30'
+                }`}
               />
             ))}
           </div>
@@ -295,8 +365,9 @@ export default function BusinessLogin({ onLoginSuccess, onRegisterClick, onBack,
           <div className="lg:hidden mt-8 pt-6 border-t border-gray-100">
             <div className="text-center">
               <div
-                className={`transition-all duration-300 ease-in-out ${isTransitioning ? 'opacity-0' : 'opacity-100'
-                  }`}
+                className={`transition-all duration-300 ease-in-out ${
+                  isTransitioning ? 'opacity-0' : 'opacity-100'
+                }`}
               >
                 <CurrentIcon className="w-8 h-8 text-blue-600 mx-auto mb-2" />
                 <p className="text-sm text-gray-600">
@@ -307,8 +378,9 @@ export default function BusinessLogin({ onLoginSuccess, onRegisterClick, onBack,
                 {languages.map((_, idx) => (
                   <div
                     key={idx}
-                    className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${idx === currentLangIndex ? 'bg-blue-500 w-4' : 'bg-gray-300'
-                      }`}
+                    className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                      idx === currentLangIndex ? 'bg-blue-500 w-4' : 'bg-gray-300'
+                    }`}
                   />
                 ))}
               </div>

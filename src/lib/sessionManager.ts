@@ -3,7 +3,7 @@ const SUPERADMIN_PREFIX = 'superadmin_';
 
 export type SessionType = 'business' | 'superadmin';
 
-export interface BusinessSession {
+interface BusinessSession {
   sessionToken: string;
   businessId: string;
   businessName: string;
@@ -16,34 +16,13 @@ interface SuperAdminSession {
   accessToken: string;
 }
 
-export type SessionChangeEvent =
-  | { type: 'business-set'; session: BusinessSession }
-  | { type: 'business-cleared' };
-
-type SessionChangeListener = (event: SessionChangeEvent) => void;
-
-const listeners: Set<SessionChangeListener> = new Set();
-
-function emit(event: SessionChangeEvent) {
-  listeners.forEach((fn) => fn(event));
-}
-
 export const sessionManager = {
-  /** Subscribe to session changes. Returns an unsubscribe function. */
-  onSessionChange(listener: SessionChangeListener): () => void {
-    listeners.add(listener);
-    return () => {
-      listeners.delete(listener);
-    };
-  },
-
   setBusinessSession(session: BusinessSession) {
     localStorage.setItem(`${BUSINESS_PREFIX}session_token`, session.sessionToken);
     localStorage.setItem(`${BUSINESS_PREFIX}id`, session.businessId);
     localStorage.setItem(`${BUSINESS_PREFIX}name`, session.businessName);
     localStorage.setItem(`${BUSINESS_PREFIX}admin_email`, session.adminEmail);
     localStorage.setItem(`${BUSINESS_PREFIX}timestamp`, Date.now().toString());
-    emit({ type: 'business-set', session });
   },
 
   getBusinessSession(): BusinessSession | null {
@@ -70,7 +49,6 @@ export const sessionManager = {
     localStorage.removeItem(`${BUSINESS_PREFIX}name`);
     localStorage.removeItem(`${BUSINESS_PREFIX}admin_email`);
     localStorage.removeItem(`${BUSINESS_PREFIX}timestamp`);
-    emit({ type: 'business-cleared' });
   },
 
   setSuperAdminSession(session: SuperAdminSession) {

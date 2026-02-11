@@ -20,16 +20,12 @@ export async function sendEmail(params: SendEmailParams): Promise<EmailResult> {
   const { to, subject, html, businessId, emailType, fromName } = params;
 
   try {
-    // Use dedicated email service URL if available, otherwise fall back to main Supabase URL
-    const emailBaseUrl = import.meta.env.VITE_EMAIL_FUNCTION_URL || `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-email`;
-    const emailAnonKey = import.meta.env.VITE_EMAIL_ANON_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
-
     const response = await fetch(
-      emailBaseUrl,
+      `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-email`,
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${emailAnonKey}`,
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -105,7 +101,7 @@ export const emailTemplates = {
         <p>${message}</p>
       </div>
       <div class="footer">
-        <p>Este es un mensaje automatico del sistema SafeTransfer Slide.</p>
+        <p>Este es un mensaje automatico del sistema MoneyTransfer Display.</p>
       </div>
     </body>
     </html>
@@ -139,7 +135,7 @@ export const emailTemplates = {
         </div>
       </div>
       <div class="footer">
-        <p>Este es un mensaje automatico del sistema SafeTransfer Slide.</p>
+        <p>Este es un mensaje automatico del sistema MoneyTransfer Display.</p>
       </div>
     </body>
     </html>
@@ -168,7 +164,7 @@ export const emailTemplates = {
         <p>Si crees que esto es un error, por favor contacta al soporte.</p>
       </div>
       <div class="footer">
-        <p>Este es un mensaje automatico del sistema SafeTransfer Slide.</p>
+        <p>Este es un mensaje automatico del sistema MoneyTransfer Display.</p>
       </div>
     </body>
     </html>
@@ -199,7 +195,7 @@ export const emailTemplates = {
         <p>Puedes responder desde tu panel de administracion.</p>
       </div>
       <div class="footer">
-        <p>Este es un mensaje automatico del sistema SafeTransfer Slide.</p>
+        <p>Este es un mensaje automatico del sistema MoneyTransfer Display.</p>
       </div>
     </body>
     </html>
@@ -233,7 +229,7 @@ export const emailTemplates = {
         ${newStatus === 'blocked' ? '<p>Si tienes alguna pregunta, por favor contacta al soporte.</p>' : ''}
       </div>
       <div class="footer">
-        <p>Este es un mensaje automatico del sistema SafeTransfer Slide.</p>
+        <p>Este es un mensaje automatico del sistema MoneyTransfer Display.</p>
       </div>
     </body>
     </html>
@@ -267,7 +263,7 @@ export const emailTemplates = {
         <p>Responde desde el panel de SuperAdmin.</p>
       </div>
       <div class="footer">
-        <p>Mensaje de soporte del sistema SafeTransfer Slide.</p>
+        <p>Mensaje de soporte del sistema MoneyTransfer Display.</p>
       </div>
     </body>
     </html>
@@ -313,7 +309,7 @@ export const emailTemplates = {
         </div>
       </div>
       <div class="footer">
-        <p>Este es un mensaje automatico del sistema SafeTransfer Slide.</p>
+        <p>Este es un mensaje automatico del sistema MoneyTransfer Display.</p>
         <p>No compartas este codigo con nadie.</p>
       </div>
     </body>
@@ -342,7 +338,7 @@ export const emailTemplates = {
       </div>
       <div class="content">
         <div class="welcome">
-          <p style="margin:0;font-size:18px;">Bienvenido a <strong>SafeTransfer Slide</strong></p>
+          <p style="margin:0;font-size:18px;">Bienvenido a <strong>MoneyTransfer Display</strong></p>
         </div>
         <p>Hola <strong>${businessName}</strong>,</p>
         <p>Gracias por registrarte. Para completar tu registro, ingresa el siguiente codigo de verificacion:</p>
@@ -352,7 +348,7 @@ export const emailTemplates = {
         </div>
       </div>
       <div class="footer">
-        <p>Este es un mensaje automatico del sistema SafeTransfer Slide.</p>
+        <p>Este es un mensaje automatico del sistema MoneyTransfer Display.</p>
         <p>No compartas este codigo con nadie.</p>
       </div>
     </body>
@@ -387,7 +383,7 @@ export const emailTemplates = {
         <p>Revisa y aprueba o rechaza esta solicitud desde el panel de SuperAdmin.</p>
       </div>
       <div class="footer">
-        <p>Solicitud del sistema SafeTransfer Slide.</p>
+        <p>Solicitud del sistema MoneyTransfer Display.</p>
       </div>
     </body>
     </html>

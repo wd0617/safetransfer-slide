@@ -199,11 +199,11 @@ export default function PasswordRecovery({ onUpdate }: PasswordRecoveryProps) {
 
       await loadRequests();
       if (onUpdate) onUpdate();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error approving request:', error);
       setMessage({
         type: 'error',
-        text: error instanceof Error ? error.message : 'Error al aprobar la solicitud'
+        text: error.message || 'Error al aprobar la solicitud'
       });
     } finally {
       setProcessing(false);
@@ -355,10 +355,11 @@ export default function PasswordRecovery({ onUpdate }: PasswordRecoveryProps) {
                     </p>
                   </div>
                   <span
-                    className={`px-3 py-1 rounded-full text-xs font-semibold ${request.status === 'approved'
+                    className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      request.status === 'approved'
                         ? 'bg-green-500/20 text-green-100'
                         : 'bg-red-500/20 text-red-100'
-                      }`}
+                    }`}
                   >
                     {request.status === 'approved' ? 'Aprobada' : 'Rechazada'}
                   </span>
@@ -418,10 +419,11 @@ export default function PasswordRecovery({ onUpdate }: PasswordRecoveryProps) {
 
             {message && (
               <div
-                className={`p-4 rounded-lg flex items-center gap-3 mb-4 ${message.type === 'success'
+                className={`p-4 rounded-lg flex items-center gap-3 mb-4 ${
+                  message.type === 'success'
                     ? 'bg-green-900/30 border border-green-800/50 text-green-100'
                     : 'bg-red-900/30 border border-red-800/50 text-red-100'
-                  }`}
+                }`}
               >
                 {message.type === 'success' ? (
                   <CheckCircle className="w-5 h-5" />
